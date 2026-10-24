@@ -49,7 +49,9 @@ These rules are enforced in code ([`electron/lib/safety.js`](electron/lib/safety
 
 ## Download
 
-Grab the latest `Reclaim-Setup-x.y.z.exe` (installer, no admin needed) or `Reclaim-x.y.z-portable.exe` from the [Releases](../../releases) page. `SHA256SUMS.txt` is attached to every release.
+**[⬇ Download Reclaim for Windows](https://github.com/msaqibatifj/reclaim-releases/releases/latest/download/Reclaim-Setup.exe)** (installer, no admin needed)
+
+Or get the [portable version](https://github.com/msaqibatifj/reclaim-releases/releases/latest/download/Reclaim-portable.exe) (no install), or browse [all releases](https://github.com/msaqibatifj/reclaim-releases/releases). `SHA256SUMS.txt` is attached to every release.
 
 The builds are not code-signed yet, so Windows SmartScreen shows "Windows protected your PC" on first run. Click **More info → Run anyway**.
 
@@ -128,7 +130,9 @@ Every root you return is validated by `assertSafeRoot()`, and every file deleted
 1. Bump `"version"` in `package.json` and add an entry to [CHANGELOG.md](CHANGELOG.md).
 2. Commit, then tag and push: `git tag v0.1.0 && git push origin main --tags`.
 
-The CI workflow runs the tests on Windows and Linux. For a `v*` tag it checks the tag matches `package.json`, builds the NSIS installer and the portable exe on Windows, and publishes a GitHub release with both files and `SHA256SUMS.txt`. No secrets need to be configured; it uses the built-in `GITHUB_TOKEN`.
+The source repo is private; builds are published to the public [reclaim-releases](https://github.com/msaqibatifj/reclaim-releases) repo so anyone can download them. For a `v*` tag, [`.github/workflows/release.yml`](.github/workflows/release.yml) runs the tests on Windows and Linux, checks the tag matches `package.json`, builds the NSIS installer and the portable exe, and publishes a release there with both files (versioned and fixed-name copies, so the download links always point at the latest) and `SHA256SUMS.txt`.
+
+It needs one secret, `RELEASES_TOKEN`: a fine-grained personal access token limited to `reclaim-releases` with **Contents: Read and write**.
 
 The builds are not code-signed, so SmartScreen will warn until a signing certificate is added (see electron-builder's `win.signtoolOptions`).
 

@@ -1,0 +1,76 @@
+name: release
+
+# Source stays in this private repo. Tagged builds are published to a public,
+# releases-only repo so anyone can download them without a GitHub login.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+env:
+  RELEASES_REPO: msaqibatifj/reclaim-releases
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+  release:
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Check the tag matches package.json
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          if ("v$version" -ne "${{ github.ref_name }}") {
+            throw "Tag ${{ github.ref_name }} does not match package.json version $version"
+          }
+
+      - run: npm run dist
+
+      - name: Add fixed-name copies and checksums
+        shell: pwsh
+        run: |
+          Set-Location release
+          Copy-Item (Get-Item 'Reclaim-Setup-*.exe').Name 'Reclaim-Setup.exe'
+          Copy-Item (Get-Item 'Reclaim-*-portable.exe').Name 'Reclaim-portable.exe'
+          Get-ChildItem *.exe | ForEach-Object {
+            "{0}  {1}" -f (Get-FileHash $_ -Algorithm SHA256).Hash.ToLower(), $_.Name
+          } | Set-Content SHA256SUMS.txt -Encoding utf8
+
+      - name: Publish to the public releases repo
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: ${{ env.RELEASES_REPO }}
+          token: ${{ secrets.RELEASES_TOKEN }}
+          tag_name: ${{ github.ref_name }}
+          name: Reclaim ${{ github.ref_name }}
+          body: |
+            **Download:** [Reclaim-Setup.exe](https://github.com/${{ env.RELEASES_REPO }}/releases/latest/download/Reclaim-Setup.exe) (installer, no admin needed) or [Reclaim-portable.exe](https://github.com/${{ env.RELEASES_REPO }}/releases/latest/download/Reclaim-portable.exe) (no install).
+
+            Windows SmartScreen may say "Windows protected your PC" because the app isn't code-signed yet. Click **More info → Run anyway**.
+          files: |
+            release/Reclaim-Setup.exe
+            release/Reclaim-portable.exe
+            release/Reclaim-Setup-*.exe
+            release/Reclaim-*-portable.exe
+            release/SHA256SUMS.txt
