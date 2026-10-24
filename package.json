@@ -1,0 +1,75 @@
+{
+  "name": "reclaim",
+  "productName": "Reclaim",
+  "version": "0.1.0",
+  "description": "Find out what is eating your disk and safely get the space back. Windows disk analyzer and cleaner.",
+  "author": "Saqib",
+  "license": "MIT",
+  "main": "electron/main.js",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -k \"vite\" \"wait-on tcp:5173 && cross-env RECLAIM_DEV=1 electron .\"",
+    "dev:web": "vite",
+    "build": "vite build",
+    "start": "electron .",
+    "test": "node --test tests/*.test.js",
+    "dist": "npm run build && electron-builder --win --publish never"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.2.0",
+    "animejs": "^4.5.0",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^44.9.3",
+    "electron-builder": "^26.17.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "vite": "^7.3.7",
+    "wait-on": "^9.0.1"
+  },
+  "build": {
+    "appId": "io.github.reclaim.app",
+    "productName": "Reclaim",
+    "copyright": "Copyright © 2026 Saqib",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "artifactName": "Reclaim-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "Reclaim-${version}-portable.${ext}"
+    }
+  },
+  "engines": {
+    "node": ">=20.19"
+  }
+}
