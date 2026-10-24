@@ -52,7 +52,9 @@ test('safety: allows a cache folder inside AppData', () => {
 });
 
 test('safety: rejects traversal segments', () => {
-  assert.throws(() => safety.assertSafeRoot(path.join(os.tmpdir(), 'a', '..', '..')), safety.SafetyError);
+  // Built by hand: path.join() would resolve the '..' segments before they reach the check.
+  const traversal = [os.tmpdir(), 'a', '..', '..'].join(path.sep);
+  assert.throws(() => safety.assertSafeRoot(traversal), /traversal/);
 });
 
 /* ---------------- deleteContents ---------------- */
